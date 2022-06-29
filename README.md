@@ -10,7 +10,7 @@ Import from repository in Grafbase
 
 ### Step 3
 
-You must configure:
+You must configure on the `todo-html.html:
 
 ```js
 const ENDPOINT = ""
