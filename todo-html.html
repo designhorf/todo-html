@@ -1,0 +1,124 @@
+<HTML>
+<script>
+    const ENDPOINT = ""
+    const KEY = ""
+    
+    const fetchTodos = () => {
+        fetch(ENDPOINT, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            "authorization": `Bearer ${KEY}`
+        },
+        body: JSON.stringify({
+            query: `query TodoLists {
+            todoListCollection(first: 99) {
+                edges {
+                    node {
+                        id
+                        title
+                        todos {
+                            id
+                            title
+                            complete
+                        }
+                    }
+                }
+            }
+        }
+            `
+        })
+        }).then((data) => data.json()).then((todos) => {
+            const element = document.getElementById('todos')
+            element.innerHTML = 
+                `
+                <div style="display: flex">
+                ${todos?.data?.todoListCollection?.edges?.map((todoList) => 
+                    `
+                    <div style="border: 1px solid black; padding: 16px">
+                      <div><b>${todoList.node.title}</b></div></br>
+                      <div>${todoList.node.todos.map((todo) => 
+                        `
+                         <div>${todo.title}</div>
+                        `).join("")}
+                      </div>
+                      </br>
+                      <button onclick="todoCreate('${todoList.node.id}')">Add todo</button>
+                    </div>
+                    `
+                    ).join("")}
+                </div>
+                `
+        })
+    }
+
+    const todoCreate = (id) => {
+        event.preventDefault()
+
+        fetch(ENDPOINT, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            "authorization": `Bearer ${KEY}`
+        },
+        body: JSON.stringify({
+            query: `
+                mutation TodoCreate($id: ID!, $title : String!) {
+                    todoCreate(input :  { title : $title, list: { link : $id } } ) 
+                            { 
+                                todo {
+                                    id
+                                }
+                            }
+                    }
+                
+                `,
+                variables : {
+                    title : Date.now().toString(),
+                    id
+                }
+        })
+        }).then(fetchTodos)
+    }
+
+    const todoListCreate = () => {
+        event.preventDefault()
+
+        fetch(ENDPOINT, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            "authorization": `Bearer ${KEY}`
+        },
+        body: JSON.stringify({
+            query: `
+                mutation TodoListCreate($title : String!) {
+                    todoListCreate(input :  { title : $title} ) 
+                            {
+                                todoList {
+                                    id
+                                }
+                            }
+                    }
+                
+                `,
+                variables : {
+                    title : Date.now().toString()
+                }
+        })
+        }).then(fetchTodos)
+    }
+
+    fetchTodos()
+
+    if(!ENDPOINT || !KEY) {
+        alert("ENDPOINT and KEY variables must be set")
+    }
+
+</script>
+<body>
+    <h1>Todos list</h1>
+    <div id="todos">Loading...</div>
+    <button onclick="todoListCreate()" style="margin-top:16px">Create todo list</button>
+</body>
+</HTML>
